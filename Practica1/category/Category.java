@@ -1,3 +1,5 @@
+package category;
+
 public class Category {
     private Integer category_id;
     private String category;
