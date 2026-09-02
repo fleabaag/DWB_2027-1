@@ -9,10 +9,10 @@ public class Category {
 
     // Constructores
 
-    public Category(String category, String tag, Integer parenteCategory_id) {
+    public Category(String category, String tag, Integer parentCategory_id) {
         this.category = category;
         this.tag = tag;
-        this.parentCategory_id = parenteCategory_id;
+        this.parentCategory_id = parentCategory_id;
     }
 
     public Category() {

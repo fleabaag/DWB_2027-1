@@ -4,81 +4,152 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.HashMap;
 
-
 public class CategoryService {
 
     private Integer currentId = 0;
     private HashSet<String> categories;
     private HashSet<String> tags;
-    private HashMap<Integer, Category> catalogoCategorias;
+    public HashMap<Integer, Category> catalogoCategorias;
 
+    /**
+     * Constructor vacío
+     */
     public CategoryService() {
+        this.categories = new HashSet<String>();
         this.tags = new HashSet<String>();
         this.catalogoCategorias = new HashMap<>();
     }
 
-    public void getCategories() {
-        System.out.println(catalogoCategorias);
+    /* ------- FUNCIONALIDADES PARA CATEGORY ------- */
+
+    /**
+     * Obtiene todas las categorías registradas
+     * 
+     * @return arreglo de las categorías
+     */
+    public ArrayList<Category> getCategories() {
+        return new ArrayList<Category>(this.catalogoCategorias.values());
     }
 
-    public void getChildCategories(Integer category_id) {
+    /**
+     * Obtiene las categorías hijas de una categoría
+     * 
+     * @param category_id
+     * @return lista de categorías hijas
+     */
+    public ArrayList<Category> getChildCategories(Integer category_id) {
 
         ArrayList<Category> childs = new ArrayList<Category>();
 
-        // for (Category category : catalogoCategorias)
-        //     if (category_id.equals(category.getParentCategory_id()))
-        //         childs.add(category);
+        for (Category category : this.catalogoCategorias.values())
+            if (category_id.equals(category.getParentCategory_id()))
+                childs.add(category);
 
-        System.out.println(childs);
-
+        return childs;
     }
 
+    /**
+     * Agrega una categoría al catálogo
+     * 
+     * @param categoria
+     */
     public void createCategory(Category categoria) {
 
         if (validateCategory(categoria)) {
+
+            categoria.setCategory_id(currentId++);
+            categoria.setStatus(1);
+
             this.catalogoCategorias.put(categoria.getCategory_id(), categoria);
+
+            this.categories.add(categoria.getCategory());
+            this.tags.add(categoria.getTag());
+
             return;
         }
-        System.err.println("Los datos ingresados no son válidos");
+        System.err.println("Los datos ingresados son inválidos, el Nombre o el Tag está repetido, o no existe la categoría padre");
     }
 
-    public void deletecategory(Integer category_id) {
+    /**
+     * Cambia de status a la categoría por medio de un id
+     * 
+     * @param category_id
+     */
+    public void deleteCategory(Integer category_id) {
 
+        Category categoria = this.catalogoCategorias.get(category_id);
+
+        if (categoria == null) {
+            System.err.println("No existe una categoría con el ID " + category_id);
+            return;
+        }
+
+        if (categoria.getStatus() == 0) {
+            System.err.println("La categoría ya se encuentra inactiva");
+            return;
+        }
+
+        ArrayList<Category> childs = getChildCategories(category_id);
+
+        if (childs.size() == 0 || hijosInactivos(childs)) {
+            this.catalogoCategorias.get(category_id).setStatus(0);
+        } else {
+            System.err.println("No se pudo elminar categoría, tiene al menos un hijo activo");
+        }
     }
 
+    /* VALIDACIONES */
 
-    public boolean validateCategory(Category c){
+    private boolean validateCategory(Category c) {
 
-        
-        // Verifica que exista category_id
-        if (!(c.getCategory_id() instanceof Integer))
-            return false;
+        Integer parentCategoryId = c.getParentCategory_id();
 
         // Verifica categoría única
-        if(categories.contains(c.getCategory()))
+        if (this.categories.contains(c.getCategory()))
             return false;
 
         // Verifica tag único
-        if(tags.contains(c.getTag()))
+        if (this.tags.contains(c.getTag()))
             return false;
 
-        // Verifica que su padre esté activo        
-        if(c.getParentCategory_id() != null && !statusActivoPadre(currentId)){
+        // Verifica que el id del padre sea un entero
+        if (parentCategoryId != null && !(parentCategoryId instanceof Integer))
             return false;
-        }
+
+        // Verifica que la categoria padre exista
+        if (parentCategoryId != null && !existePadre(parentCategoryId))
+            return false;
 
         // Verifica que no sea padre de si mismo
-        if(c.getParentCategory_id() != null && c.getParentCategory_id().equals(c.getCategory_id()))
+        if (parentCategoryId != null && parentCategoryId.equals(c.getCategory_id()))
+            return false;
+
+        // Verifica que su padre esté activo
+        if (parentCategoryId != null && !statusActivoPadre(parentCategoryId))
             return false;
 
         return true;
     }
 
-    public boolean statusActivoPadre(Integer parentCategoryId){
-
-        Category padre = this.catalogoCategorias.get(parentCategoryId);
-        if(padre.getStatus().intValue() == 1)
+    private boolean statusActivoPadre(Integer parentCategoryId) {
+        if (this.catalogoCategorias.get(parentCategoryId).getStatus() == 1)
             return true;
         return false;
     }
+
+    private boolean existePadre(Integer parentCategory_id) {
+        if (this.catalogoCategorias.get(parentCategory_id) instanceof Category)
+            return true;
+        return false;
+    }
+
+    private boolean hijosInactivos(ArrayList<Category> childs) {
+
+        for (Category category : childs)
+            if (category.getStatus() == 1)
+                return false;
+
+        return true;
+    }
+
 }
