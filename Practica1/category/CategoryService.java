@@ -6,7 +6,7 @@ import java.util.HashMap;
 
 public class CategoryService {
 
-    private Integer currentId = 0;
+    private Integer currentId = 1;
     private HashSet<String> categories;
     private HashSet<String> tags;
     public HashMap<Integer, Category> catalogoCategorias;

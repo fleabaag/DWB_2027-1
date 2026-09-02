@@ -6,108 +6,39 @@ import java.util.Scanner;
 
 public class Main {
 
-    private static final String PROMPT = "$> ";
-
     public static void main(String[] args) {
 
         Scanner sc = new Scanner(System.in);
         CategoryService categoryService = new CategoryService();
 
-        mostrarBienvenida();
-
         boolean ejecutar = true;
 
         while (ejecutar) {
+            mostrarMenu();
+            String opcion = sc.nextLine().trim();
 
-            System.out.print(PROMPT);
-
-            String entrada = sc.nextLine().trim();
-
-            if (entrada.isEmpty()) {
-                continue;
-            }
-
-            String[] partes = entrada.split("\\s+");
-
-            String comando = partes[0].toLowerCase();
-
-            switch (comando) {
-
-                case "mostrar_categorias":
-                    if (partes.length != 1) {
-                        errorUso("mostrar_categorias");
-                    } else {
-                        mostrarCategorias(categoryService.getCategories());
-                    }
+            switch (opcion) {
+                case "1":
+                    mostrarCategorias(categoryService.getCategories());
                     break;
-
-                case "obtener_hijos":
-                    if (partes.length != 2) {
-                        errorUso("obtener_hijos [N]");
-                    } else {
-                        Integer id = convertirId(partes[1]);
-
-                        if (id != null) {
-                            ArrayList<Category> hijos = categoryService.getChildCategories(id);
-
-                            if (hijos.isEmpty()) {
-                                System.out.println(
-                                        "La categoría no tiene hijos registrados.");
-                            } else {
-                                mostrarCategorias(hijos);
-                            }
-                        }
-                    }
+                case "2":
+                    obtenerHijos(sc, categoryService);
                     break;
-
-                case "crear_categoria":
-                    if (partes.length != 4) {
-                        errorUso(
-                                "crear_categoria [NombreCategoria] [Tag] [id_padre]");
-                    } else {
-                        crearCategoria(
-                                categoryService,
-                                partes[1],
-                                partes[2],
-                                partes[3]);
-                    }
+                case "3":
+                    crearCategoria(sc, categoryService);
                     break;
-
-                case "borrar_categoria":
-                    if (partes.length != 2) {
-                        errorUso("borrar_categoria [N]");
-                    } else {
-                        Integer id = convertirId(partes[1]);
-
-                        if (id != null) {
-                            categoryService.deleteCategory(id);
-                        }
-                    }
+                case "4":
+                    borrarCategoria(sc, categoryService);
                     break;
-
+                case "5":
+                    ejecutar = false;
+                    System.out.println("Hasta luego.");
+                    break;
                 case "help":
-                    if (partes.length != 1) {
-                        errorUso("help");
-                    } else {
-                        mostrarHelp();
-                    }
+                    mostrarHelp();
                     break;
-
-                case "salir":
-                    if (partes.length != 1) {
-                        errorUso("salir");
-                    } else {
-                        ejecutar = false;
-                        System.out.println("Hasta luego.");
-                    }
-                    break;
-
                 default:
-                    System.err.println(
-                            "Error: comando no reconocido: " + partes[0]);
-                    System.out.println(
-                            "Escribe 'help' para consultar los comandos disponibles.");
-                    break;
+                    System.err.println("Error: selecciona una opción disponible");
             }
         }
 
@@ -115,28 +46,75 @@ public class Main {
     }
 
     /**
-     * Muestra el mensaje inicial del programa.
+     * Muestra el menu del sistema 
      */
-    private static void mostrarBienvenida() {
+    private static void mostrarMenu() {
 
         System.out.println();
         System.out.println("==========================================");
         System.out.println("       SISTEMA DE CATEGORÍAS");
         System.out.println("==========================================");
         System.out.println();
-        System.out.println("Bienvenido al sistema de categorías.");
+        System.out.println("Selecciona una opción:");
+        System.out.println("  1. Mostrar categorías");
+        System.out.println("  2. Obtener categorías hijas");
+        System.out.println("  3. Crear categoría");
+        System.out.println("  4. Borrar categoría");
+        System.out.println("  5. Salir");
+        System.out.println("Escribe 'help' si necesitas información sobre los comandos");
+        System.out.print("Ingresa una opción: ");
+    }
+
+    private static void obtenerHijos(Scanner sc, CategoryService categoryService) {
         System.out.println();
-        System.out.println("Comandos disponibles:");
-        System.out.println("  mostrar_categorias");
-        System.out.println("  obtener_hijos");
-        System.out.println("  crear_categoria");
-        System.out.println("  borrar_categoria");
-        System.out.println("  salir");
-        System.out.println("  help");
+        System.out.println("OBTENER CATEGORIAS HIJAS");
         System.out.println();
-        System.out.println(
-                "Escribe 'help' para obtener información sobre el uso de los comandos.");
+        System.out.println("Indica el ID de la categoría padre.");
+        System.out.print("ID de la categoría: ");
+        Integer id = convertirId(sc.nextLine().trim());
+
+        if (id != null) {
+            ArrayList<Category> hijos = categoryService.getChildCategories(id);
+
+            if (hijos.isEmpty()) {
+                System.out.println("La categoría no tiene hijos registrados.");
+            } else {
+                mostrarCategorias(hijos);
+            }
+        }
+    }
+
+    private static void crearCategoria(Scanner sc, CategoryService categoryService) {
         System.out.println();
+        System.out.println("CREAR CATEGORIA NUEVA");
+        System.out.println();
+        System.out.println("Ingresa los datos de la nueva categoría.");
+        System.out.print("Nombre de la categoría: ");
+        String nombre = sc.nextLine().trim();
+        System.out.print("Tag de la categoría: ");
+        String tag = sc.nextLine().trim();
+        System.out.print("ID de la categoría padre (escribe null si es raíz): ");
+        String idPadreTexto = sc.nextLine().trim();
+
+        if (nombre.isEmpty() || tag.isEmpty()) {
+            System.err.println("Error: el nombre y el tag no pueden estar vacíos.");
+            return;
+        }
+        System.out.println();
+        crearCategoria(categoryService, nombre, tag, idPadreTexto);
+    }
+
+    private static void borrarCategoria(Scanner sc, CategoryService categoryService) {
+        System.out.println();
+        System.out.println("BORRAR CATEGORIA");
+        System.out.println();
+        System.out.println("Ingresa el ID de la categoría que deseas borrar.");
+        System.out.print("ID de la categoría: ");
+        Integer id = convertirId(sc.nextLine().trim());
+
+        if (id != null) {
+            categoryService.deleteCategory(id);
+        }
     }
 
     /**
@@ -145,23 +123,23 @@ public class Main {
     private static void mostrarHelp() {
 
         System.out.println();
-        System.out.println("COMANDOS DISPONIBLES");
+        System.out.println("FUNCIONES DISPONIBLES");
         System.out.println();
 
         System.out.println(
-                "mostrar_categorias");
+                "Mostrar categorias");
         System.out.println(
                 "    Muestra todas las categorías registradas durante la ejecución.");
         System.out.println();
 
         System.out.println(
-                "obtener_hijos [N]");
+                "Obtener hijos [N]");
         System.out.println(
                 "    Muestra las categorías hijas de la categoría con ID N.");
         System.out.println();
 
         System.out.println(
-                "crear_categoria [NombreCategoria] [Tag] [id_padre]");
+                "Crear categoria ([NombreCategoria] [Tag] [id_padre])");
         System.out.println(
                 "    Crea una categoría con nombre, tag e ID de categoría padre.");
         System.out.println(
@@ -169,7 +147,7 @@ public class Main {
         System.out.println();
 
         System.out.println(
-                "borrar_categoria [N]");
+                "Borrar categoria [N]");
         System.out.println(
                 "    Desactiva la categoría con ID N.");
         System.out.println(
@@ -213,8 +191,7 @@ public class Main {
         categoryService.createCategory(categoria);
 
         /**
-         * CategoryService no devuelve un boolean indicando si la operación
-         * fue exitosa. Por eso comprobamos si la categoría fue registrada.
+         * Comprobamos si la categoría fue registrada.
          */
         if (categoria.getCategory_id() != null) {
             System.out.println(
@@ -246,6 +223,9 @@ public class Main {
      * Imprime una lista de categorías en formato de tabla.
      */
     private static void mostrarCategorias(ArrayList<Category> categorias) {
+        System.out.println();
+        System.out.println("CATEGORIAS DISPONIBLES");
+        System.out.println();
 
         if (categorias.isEmpty()) {
             System.out.println("No existen categorías registradas.");
