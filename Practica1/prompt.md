@@ -17,3 +17,4 @@ Debe mostrar un saludo inicial y mostrar los comandos disponibles sin descripci√
 Para comandos que regresan listas de categorias formatear en una tabla con las columnas: ID, Nombre, Tag, ID_Padre, Status. Si ID_Padre es null, entonces la tabla imprime '-', si el Status es 0 entonces imprime 'Inactivo', si Status es 1, imprime 'Activo'
 
 Adjunto las clases Category y CategoryService: 
+

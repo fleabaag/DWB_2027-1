@@ -46,7 +46,7 @@ public class Main {
     }
 
     /**
-     * Muestra el menu del sistema 
+     * Muestra el menu del sistema
      */
     private static void mostrarMenu() {
 
@@ -72,15 +72,23 @@ public class Main {
         System.out.println("Indica el ID de la categoría padre.");
         System.out.print("ID de la categoría: ");
         Integer id = convertirId(sc.nextLine().trim());
+        System.out.println();
 
         if (id != null) {
-            ArrayList<Category> hijos = categoryService.getChildCategories(id);
 
-            if (hijos.isEmpty()) {
-                System.out.println("La categoría no tiene hijos registrados.");
+            if (categoryService.catalogoCategorias.get(id) != null) {
+
+                ArrayList<Category> hijos = categoryService.getChildCategories(id);
+
+                if (hijos.isEmpty())
+                    System.err.println("Error: La categoría no tiene hijos registrados.");
+                else
+                    mostrarCategorias(hijos);
+
             } else {
-                mostrarCategorias(hijos);
+                System.err.println("Error: No existe categoría alguna con el Id proporcionado.");
             }
+
         }
     }
 
@@ -93,14 +101,14 @@ public class Main {
         String nombre = sc.nextLine().trim();
         System.out.print("Tag de la categoría: ");
         String tag = sc.nextLine().trim();
-        System.out.print("ID de la categoría padre (escribe null si es raíz): ");
+        System.out.print("ID de la categoría padre [SIN CATEGORÍA PADRE PRESIONA ENTER]: ");
         String idPadreTexto = sc.nextLine().trim();
+        System.out.println();
 
         if (nombre.isEmpty() || tag.isEmpty()) {
             System.err.println("Error: el nombre y el tag no pueden estar vacíos.");
             return;
         }
-        System.out.println();
         crearCategoria(categoryService, nombre, tag, idPadreTexto);
     }
 
@@ -111,10 +119,11 @@ public class Main {
         System.out.println("Ingresa el ID de la categoría que deseas borrar.");
         System.out.print("ID de la categoría: ");
         Integer id = convertirId(sc.nextLine().trim());
+        System.out.println();
 
-        if (id != null) {
-            categoryService.deleteCategory(id);
-        }
+        if (id != null && categoryService.deleteCategory(id))
+            System.out.println("Categoría con id: " + id + " borrada con éxito.");
+
     }
 
     /**
@@ -175,13 +184,13 @@ public class Main {
 
         Integer idPadre = null;
 
-        if (!idPadreTexto.equalsIgnoreCase("null")) {
+        if (!idPadreTexto.equalsIgnoreCase("")) {
 
             try {
                 idPadre = Integer.parseInt(idPadreTexto);
             } catch (NumberFormatException e) {
                 System.err.println(
-                        "Error: id_padre debe ser un número entero o 'null'.");
+                        "Error: id_padre debe ser un número entero");
                 return;
             }
         }
@@ -213,7 +222,7 @@ public class Main {
         } catch (NumberFormatException e) {
 
             System.err.println(
-                    "Error: el ID debe ser un número entero.");
+                    "\nError: el ID debe ser un número entero.");
 
             return null;
         }
@@ -275,15 +284,4 @@ public class Main {
         System.out.println();
     }
 
-    /**
-     * Muestra un error de uso de un comando.
-     */
-    private static void errorUso(String uso) {
-
-        System.err.println(
-                "Error: uso incorrecto del comando.");
-
-        System.err.println(
-                "Uso: " + uso);
-    }
 }

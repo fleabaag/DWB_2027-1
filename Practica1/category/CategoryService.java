@@ -55,19 +55,48 @@ public class CategoryService {
      */
     public void createCategory(Category categoria) {
 
-        if (validateCategory(categoria)) {
+        int validacion = validateCategory(categoria);
 
-            categoria.setCategory_id(currentId++);
-            categoria.setStatus(1);
+        switch (validacion) {
+            case 1:
+                categoria.setCategory_id(currentId++);
+                categoria.setStatus(1);
 
-            this.catalogoCategorias.put(categoria.getCategory_id(), categoria);
+                this.catalogoCategorias.put(categoria.getCategory_id(), categoria);
 
-            this.categories.add(categoria.getCategory());
-            this.tags.add(categoria.getTag());
-
-            return;
+                this.categories.add(categoria.getCategory());
+                this.tags.add(categoria.getTag());
+                return;
+            case 2:
+                System.err.println(
+                        "Error: ¡El nombre de categoría proporcionado ya existe!");
+                return;
+            case 3:
+                System.err.println(
+                        "Error: ¡El tag proporcionado ya existe!");
+                return;
+            case 4:
+                System.err.println(
+                        "Error: ¡El id del padre debe ser un número entero!");
+                return;
+            case 5:
+                System.err.println(
+                        "Error: ¡No existe una cateogoría padre con el id proporcionado!");
+                return;
+            case 6:
+                System.err.println(
+                        "Error: ¡No se puede ser categoría hija de si misma!");
+                return;
+            case 7:
+                System.err.println(
+                        "Error: ¡La categoría padre debe estar activa para ser asignada!");
+                return;
+            default:
+                break;
         }
-        System.err.println("Los datos ingresados son inválidos, el Nombre o el Tag está repetido, o no existe la categoría padre");
+
+        System.err.println(
+                "");
     }
 
     /**
@@ -75,60 +104,62 @@ public class CategoryService {
      * 
      * @param category_id
      */
-    public void deleteCategory(Integer category_id) {
+    public boolean deleteCategory(Integer category_id) {
 
         Category categoria = this.catalogoCategorias.get(category_id);
 
         if (categoria == null) {
-            System.err.println("No existe una categoría con el ID " + category_id);
-            return;
+            System.err.println("Error: No existe una categoría con el ID " + category_id);
+            return false;
         }
 
         if (categoria.getStatus() == 0) {
-            System.err.println("La categoría ya se encuentra inactiva");
-            return;
+            System.err.println("Error: La categoría ya se encuentra inactiva");
+            return false;
         }
 
         ArrayList<Category> childs = getChildCategories(category_id);
 
         if (childs.size() == 0 || hijosInactivos(childs)) {
             this.catalogoCategorias.get(category_id).setStatus(0);
+            return true;
         } else {
-            System.err.println("No se pudo elminar categoría, tiene al menos un hijo activo");
+            System.err.println("Error: No se pudo elminar categoría, tiene al menos un hijo activo");
+            return false;
         }
     }
 
     /* VALIDACIONES */
 
-    private boolean validateCategory(Category c) {
+    private int validateCategory(Category c) {
 
         Integer parentCategoryId = c.getParentCategory_id();
 
         // Verifica categoría única
         if (this.categories.contains(c.getCategory()))
-            return false;
+            return 2;
 
         // Verifica tag único
         if (this.tags.contains(c.getTag()))
-            return false;
+            return 3;
 
         // Verifica que el id del padre sea un entero
         if (parentCategoryId != null && !(parentCategoryId instanceof Integer))
-            return false;
+            return 4;
 
         // Verifica que la categoria padre exista
         if (parentCategoryId != null && !existePadre(parentCategoryId))
-            return false;
+            return 5;
 
         // Verifica que no sea padre de si mismo
         if (parentCategoryId != null && parentCategoryId.equals(c.getCategory_id()))
-            return false;
+            return 6;
 
         // Verifica que su padre esté activo
         if (parentCategoryId != null && !statusActivoPadre(parentCategoryId))
-            return false;
+            return 7;
 
-        return true;
+        return 1;
     }
 
     private boolean statusActivoPadre(Integer parentCategoryId) {
